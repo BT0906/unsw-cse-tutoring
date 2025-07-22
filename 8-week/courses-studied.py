@@ -17,7 +17,56 @@ def main(db):
 
     cur = db.cursor()
 
+    # check if the student exists
+    query = """
+      SELECT id
+      FROM Students
+      WHERE id = %s
+    """
+    cur.execute(query, [student_id])
+
+    student = cur.fetchone()
+
+    if student is None:
+        print("No such student")
+        cur.close()
+        return 0
     
+    student_id = student[0]
+
+
+    # Check if the term is valid
+    query = """
+      SELECT id
+      FROM Terms
+      WHERE code = %s
+    """
+    cur.execute(query, [term_code])
+    term = cur.fetchone()
+
+    if term is None:
+        print("No such term")
+        cur.close()
+        return 0
+
+    term_id = term[0]
+
+    query = """
+      SELECT s.code, s.name
+      FROM Courses c
+      JOIN Terms t on t.id = c.term
+      JOIN Course_enrolments e on c.id = e.course 
+      JOIN Subjects s on c.subject = s.id
+      WHERE t.id = %s
+      AND e.student = %s
+      ORDER BY s.code, s.name
+    """
+    cur.execute(query, [term_id, student_id])
+
+    courses = cur.fetchall()
+
+    for code, title in courses:
+        print(code, title)
 
     cur.close()
     return 0
